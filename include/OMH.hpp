@@ -17,9 +17,6 @@ Guillaume Marçais, Dan DeBlasio, Prashant Pandey, Carl Kingsford, Locality-sens
 #include <algorithm>
 #include <random>
 #include <limits>
-
-// #include <xxhash.hpp>
-// #include <seeded_prg.hpp>
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 
 struct mer_info {
@@ -47,12 +44,6 @@ public:
     std::unordered_map<std::uint64_t, std::vector<std::vector<seqan3::dna5>>> omh2reads_main(std::vector<std::vector<seqan3::dna5>> unique_reads, std::uint64_t seed, unsigned k);
     std::vector<std::uint64_t> omh_pos2(const std::vector<seqan3::dna5>& read, unsigned k, std::uint64_t seed);
     ////////////////////////////////
-    // std::vector<uint64_t> omh_pos(const std::vector<seqan3::dna5>& read, unsigned k, std::uint64_t seed, int m);
-    // std::unordered_map<std::uint64_t, std::vector<std::vector<seqan3::dna5>>> omhs2read_main(std::vector<std::vector<seqan3::dna5>> unique_reads, unsigned k, std::uint64_t seed, int m);
-    ////////////////////////////////
-    // std::unordered_map<std::uint64_t, std::vector<std::vector<seqan3::dna5>>> omh2read_main(std::vector<std::vector<seqan3::dna5>> unique_reads, std::vector<std::uint64_t> seeds, unsigned k);
-    
-    // uint64_t omh_pos(const std::vector<seqan3::dna5>& read, unsigned k, unsigned int seed);
 private:
     // std::map<std::vector<seqan3::dna5>, uint32_t> read2count;
     // std::vector<std::vector<seqan3::dna5>> unique_reads;
@@ -60,85 +51,5 @@ private:
     graph_arguments args;
 
 };
-
-// uint64_t omh_pos(const std::vector<seqan3::dna5>& read, unsigned k, unsigned l, unsigned int seed) {
-//     auto seql = read | seqan3::views::to_char;
-//     string seq(seql.begin(), seql.end());
-//     if(seq.size() < k) return {};
-
-//     const bool weight = l > 0;
-//     if(l == 0) l = 1;
-
-//     std::vector<mer_info> mers;
-//     std::unordered_map<std::string, unsigned> occurrences;
-
-//     //  Create list of k-mers with occurrence numbers
-//     for(size_t i = 0; i < seq.size() - k + 1; ++i) {
-//         auto occ = occurrences[seq.substr(i, k)]++;
-//         mers.emplace_back(i, occ, (uint64_t)0);
-//     }
-
-//     xxhash hash;
-//     // uint64_t omh_result;
-
-//     for(auto& meri : mers) {
-//       hash.reset(seed);
-//       hash.update(&seq.data()[meri.pos], k);
-//       if(weight) hash.update(&meri.occ, sizeof(meri.occ));
-//       meri.hash = hash.digest();
-//     }
-//     std::partial_sort(mers.begin(), mers.begin() + l, mers.end(), [&](const mer_info& x, const mer_info& y) { return x.hash < y.hash; });
-//     std::sort(mers.begin(), mers.begin() + l, [&](const mer_info& x, const mer_info& y) { return x.pos < y.pos; });
-
-//     return mers[0].hash; // Return the OMH results
-// }
-
-
-// template<typename EngineT>
-// std::vector<uint64_t> omh_pos(const std::vector<seqan3::dna5>& read, unsigned k, unsigned l, unsigned m, EngineT& prg);
-
-// template<typename EngineT>
-// // std::vector<uint64_t> omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, EngineT& prg) {
-// std::vector<uint64_t> omh_pos(const std::vector<seqan3::dna5>& read, unsigned k, unsigned l, unsigned m, EngineT& prg) {
-//     auto seql = read | seqan3::views::to_char;
-//     string seq(seql.begin(), seql.end());
-//     if(seq.size() < k) return {};
-
-//     const bool weight = l > 0;
-//     if(l == 0) l = 1;
-
-//     std::vector<mer_info> mers;
-//     std::unordered_map<std::string, unsigned> occurrences;
-
-//     //  Create list of k-mers with occurrence numbers
-//     for(size_t i = 0; i < seq.size() - k + 1; ++i) {
-//         auto occ = occurrences[seq.substr(i, k)]++;
-//         mers.emplace_back(i, occ, (uint64_t)0);
-//     }
-
-//     xxhash hash;
-//     std::vector<uint64_t> omh_results;
-//     for(unsigned i = 0; i < m; ++i) {
-//         const auto seed = prg();
-//         for(auto& meri : mers) {
-//         hash.reset(seed);
-//         hash.update(&seq.data()[meri.pos], k);
-//         if(weight) hash.update(&meri.occ, sizeof(meri.occ));
-//         meri.hash = hash.digest();
-//         }
-
-//         // std::partial_sort(mers.begin(), mers.begin() + l, mers.end(), & { return x.hash < y.hash; });
-//         // std::partial_sort(mers.begin(), mers.begin() + l, mers.end(),  { return x.hash < y.hash; });
-
-//         std::partial_sort(mers.begin(), mers.begin() + l, mers.end(), [&](const mer_info& x, const mer_info& y) { return x.hash < y.hash; });
-//         std::sort(mers.begin(), mers.begin() + l, [&](const mer_info& x, const mer_info& y) { return x.pos < y.pos; });
-
-
-//         omh_results.push_back(mers[0].hash); // Save the smallest hash as the OMH result for this round
-//     }
-
-//     return omh_results; // Return the OMH results
-// }
-
 
 #endif /* __OMH_H__ */

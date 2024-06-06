@@ -18,10 +18,7 @@ class ReadWrite{
     public:
         ReadWrite(graph_arguments args);//constructor
         ~ReadWrite(); //deconstructor
-        // std::pair<std::vector<std::vector<seqan3::dna5>>, std::unordered_map<std::vector<seqan3::dna5>, uint32_t>> get_unique_reads_counts();
         std::tuple<std::vector<std::vector<seqan3::dna5>>, std::map<std::vector<seqan3::dna5>, uint32_t>, unsigned> get_unique_reads_counts();
-        // std::map<std::vector<seqan3::dna5>, uint32_t> get_unique_reads_counts();
-        // std::tuple<std::map<std::vector<seqan3::dna5>, uint32_t>, std::unordered_map<std::string, std::vector<seqan3::dna5>> get_unique_reads_counts();
     private:
         graph_arguments args;
 };
