@@ -3,11 +3,14 @@
 #define GraphConstructor_HPP
 
 #include "Utils.hpp"
+#include "OMH.hpp"
+#include "MinimizerGenerator.hpp"
 #include "LoggingLevels.hpp"
 #include "ReadWrite.hpp"
 
 #include <seqan3/core/debug_stream.hpp>
 #include <seqan3/search/all.hpp>
+#include <ranges>
 #include <vector>
 #include <set>
 #include <seqan3/alphabet/all.hpp>
@@ -21,12 +24,16 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/properties.hpp>
-// #include <boost/graph/graphml.hpp>
-#include <seqan3/core/debug_stream.hpp> // for debug_stream
-// #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_utility.hpp>
 #include <boost/property_map/dynamic_property_map.hpp>
-// #include <boost/graph/depth_first_search.hpp>
+#include <utility>
+#include <execution>
+#include <seqan3/alignment/pairwise/align_pairwise.hpp>
+#include <seqan3/alignment/scoring/nucleotide_scoring_scheme.hpp>
+#include <seqan3/utility/views/pairwise_combine.hpp>
+#include <seqan3/alphabet/views/to_rank.hpp>
+#include <omp.h>
+#include <deque>
 
 using namespace std;
 using namespace seqan3::literals;
@@ -106,10 +113,13 @@ void remove_edges_in_interval(Graph& g, int lower_bound, int upper_bound) {
     }
 }
 
+template<typename ArgsType>
 class GraphConstructor
 {
 public:
-    GraphConstructor(std::map<std::vector<seqan3::dna5>, uint32_t> read2count, graph_arguments args);
+    // GraphConstructor(std::map<std::vector<seqan3::dna5>, uint32_t> read2count, graph_arguments args);
+    GraphConstructor(std::map<std::vector<seqan3::dna5>, uint32_t> read2count, ArgsType args);
+    
     void init_graph();
     void insert_edge(std::vector<seqan3::dna5> read1, std::vector<seqan3::dna5> read2, int edit_dis);
     std::vector<std::vector<seqan3::dna5>> mergeUniqueReads(const std::vector<std::vector<std::vector<seqan3::dna5>>>& read_vectors);
@@ -124,10 +134,14 @@ public:
 private:
     // std::unordered_map<std::uint64_t, std::vector<std::vector<seqan3::dna5>>> key2reads_;
     std::map<std::vector<seqan3::dna5>, uint32_t> read2count_;
-    graph_arguments args;
+    // graph_arguments args;
+    ArgsType args;
     std::filesystem::path graph_full_path_;
     std::unordered_map<std::vector<seqan3::dna5>, Vertex, std::hash<std::vector<seqan3::dna5>>> read2vertex_;
     std::unordered_map<Vertex, std::vector<seqan3::dna5>, std::hash<Vertex>> vertex2read_;
     Graph graph_;
 };
+
+#include "../src/GraphConstructor.tpp"
+
 #endif // GraphConstructor_H

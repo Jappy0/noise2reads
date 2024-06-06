@@ -5,18 +5,18 @@ project(noise2reads CXX)
 find_package(seqan3 REQUIRED)
 find_package(sharg REQUIRED)
 
+#include_directories
+include_directories(include)
 # Add your source files
 set(SOURCES
     LoggingLevels.cpp
-    Utils.cpp
+    Utils.tpp
+    ReadWrite.tpp
+    MinimizerGenerator.tpp
+    OMH.tpp
+    GraphConstructor.tpp
     noise2reads.cpp
-    ReadWrite.cpp
-    MinimizerGenerator.cpp
-    GraphConstructor.cpp
-    OMH.cpp
 )
-#include_directories
-include_directories(include)
 
 set(CMAKE_CXX_FLAGS "${CAMKE_CXX_FLAGS} -std=c++20 -fopenmp -static-libgcc -static-libstdc++ -isystem $ENV{CONDA_PREFIX}/include -isystem $ENV{CONDA_PREFIX}/include/seqan3/submodules/sdsl-lite/include -isystem $ENV{CONDA_PREFIX}/include/seqan3/submodules/cereal/include -fconcepts -g -Wall -lyaml-cpp -Wno-interference-size -Wno-maybe-uninitialized") #-fsanitize=address
 

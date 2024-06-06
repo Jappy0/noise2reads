@@ -88,8 +88,9 @@ int main(int argc, char** argv) {
     } else if (sub_parser.info.app_name == std::string_view{"noise2reads-read"}){
 
     } else if (sub_parser.info.app_name == std::string_view{"noise2reads-graph"}){
-        graph_arguments graph_args;
-        Utils::getInstance().graph_parser(sub_parser, graph_args);
+        using Args_Type = graph_arguments;
+        Args_Type args;
+        Utils::getInstance().graph_parser(sub_parser, args);
 
         try
         {
@@ -102,30 +103,32 @@ int main(int argc, char** argv) {
         }
         ////////////////////////////////////////////////////////////////////////////
         // Ensure the user-specified number of cores is within a valid range
-        graph_args.num_process = std::min(std::max(graph_args.num_process, 1), available_cores);
+        args.num_process = std::min(std::max(args.num_process, 1), available_cores);
         // std::cout << "The number of threads :" << num_cores_to_use << std::endl;
-        Utils::getInstance().logger(LOG_LEVEL_INFO,  std::format("The number of threads: {} ", graph_args.num_process));
+        Utils::getInstance().logger(LOG_LEVEL_INFO,  std::format("The number of threads: {} ", args.num_process));
 
-        auto [unique_reads, read2count, min_read_length] = ReadWrite(graph_args).get_unique_reads_counts();
-        graph_args.read_length = min_read_length;
+        ////////////////////////////////////////////////////////////
+        // ReadWrite<Args_Type> read_write(args);
+        auto [unique_reads, read2count, min_read_length] = ReadWrite<Args_Type>(args).get_unique_reads_counts();
+        args.read_length = min_read_length;
         auto total_uniq_num = unique_reads.size();
         Utils::getInstance().logger(LOG_LEVEL_INFO,  std::format("The number of unique reads: {}, minimum read length: {}.", total_uniq_num, min_read_length));
-
-        if (graph_args.pair_wise) {
-            GraphConstructor graph_constructor(read2count, graph_args);
+        //////////////////////////////////////////////////////////////
+        GraphConstructor<Args_Type> graph_constructor(read2count, args);
+        if (args.pair_wise) {
             graph_constructor.construt_graph_via_pairwise_comparison(unique_reads);
-            if (graph_args.save_graph){
+            if (args.save_graph){
                 graph_constructor.save_graph();
             }
         } else {
             // minimizer grouping first and then omh
-            auto betterParams = MinimizerGenerator(graph_args).possibleBetterParameters();
+            MinimizerGenerator<Args_Type> minimizer_generator(args);
+            auto betterParams = minimizer_generator.possibleBetterParameters();
 
-            auto hash2reads = MinimizerGenerator(graph_args).minimizer2reads_main(unique_reads, betterParams);  
+            auto hash2reads = minimizer_generator.minimizer2reads_main(unique_reads, betterParams);  
 
-            GraphConstructor graph_constructor(read2count, graph_args);
             graph_constructor.construct_graph(hash2reads);
-            if (graph_args.save_graph){
+            if (args.save_graph){
                 graph_constructor.save_graph();
             }
         }

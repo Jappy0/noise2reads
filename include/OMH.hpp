@@ -30,11 +30,12 @@ struct mer_info {
   { }
 };
 
+template<typename ArgsType>
 class OMH
 {
 public:
     // OMH(std::map<std::vector<seqan3::dna5>, uint32_t> read2count, graph_arguments args);
-    OMH(graph_arguments args);
+    OMH(ArgsType args);
     // std::vector<std::pair<std::uint64_t, unsigned>> get_seeds_k();
     std::unordered_map<std::uint64_t, std::vector<std::vector<seqan3::dna5>>> omh2read_main(std::vector<std::vector<seqan3::dna5>> unique_reads, std::vector<std::pair<std::uint64_t, unsigned>> seeds_k);
     uint64_t omh_pos(const std::vector<seqan3::dna5>& read, unsigned k, std::uint64_t seed);
@@ -48,8 +49,11 @@ private:
     // std::map<std::vector<seqan3::dna5>, uint32_t> read2count;
     // std::vector<std::vector<seqan3::dna5>> unique_reads;
     std::unordered_map<std::uint64_t, std::vector<std::vector<seqan3::dna5>>> omh2reads;
-    graph_arguments args;
+    // graph_arguments args;
+    ArgsType args;
 
 };
+
+#include "../src/OMH.tpp"
 
 #endif /* __OMH_H__ */

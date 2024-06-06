@@ -7,6 +7,7 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
+#include "LoggingLevels.hpp"
 #include <string>
 #include <memory>
 #include <map>
@@ -21,6 +22,9 @@
 extern int num_cores_to_use;  // Declare the global variable
 
 using namespace std;
+
+#define noise2reads_VERSION "0.1.0"
+#define last_update_date "06.06.2024"
 
 struct graph_arguments
 {
@@ -110,18 +114,27 @@ struct read_arguments
 class Utils{
     public:
         static Utils& getInstance();
-
+        
         void logger(int log_level, const std::string& message);
-        void graph_parser(sharg::parser & parser, graph_arguments & args);
-        void umi_parser(sharg::parser & parser, umi_arguments & args);
-        void read_parser(sharg::parser & parser, read_arguments & args);
+                
+        template<typename ArgsType>
+        void graph_parser(sharg::parser & parser, ArgsType & args);
+                
+        template<typename ArgsType>
+        void umi_parser(sharg::parser & parser, ArgsType & args);
+                
+        template<typename ArgsType>
+        void read_parser(sharg::parser & parser, ArgsType & args);
+        // void common_parser(sharg::parser & parser, common_arguments & args);
     private:
         std::ofstream logFile;
 
         Utils();
         Utils(const Utils&) = delete;
         Utils& operator=(const Utils&) = delete;        
-
 };
+
+
+#include "../src/Utils.tpp"
 
 #endif
