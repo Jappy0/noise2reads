@@ -71,8 +71,7 @@ public:
     custom_edge_label_writer(Name _name) : name(_name) {}
     template <class Edge>
     void operator()(std::ostream& out, const Edge& e) const {
-        out << "[" << name[e].weight << "]";
-        // out << "[weight=\"" << name[e].weight << "\"]";
+        out << " [weight=\"" << name[e].weight << "\"]";
     }
 private:
     Name name;
@@ -85,7 +84,7 @@ public:
     template <class Vertex>
     void operator()(std::ostream& out, const Vertex& v) const {
         auto seq = name[v].read | seqan3::views::to_char;
-        out << " [" << name[v].count << ", " << std::string(seq.begin(), seq.end()) << "]";
+        out << " [count=\"" << name[v].count << "\", read=\"" << std::string(seq.begin(), seq.end()) << "\"]";
     }
 private:
     Name name;
