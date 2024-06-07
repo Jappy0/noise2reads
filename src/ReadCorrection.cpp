@@ -1,5 +1,11 @@
 // ReadCorrection.cpp
 #include "ReadCorrection.hpp"
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/connected_components.hpp>
+#include <iostream>
+#include <vector>
+
+using namespace boost;
 
 ReadCorrection::ReadCorrection(Graph graph, read_arguments args, std::unordered_map<std::vector<seqan3::dna5>, Vertex, std::hash<std::vector<seqan3::dna5>>> read2vertex, std::unordered_map<Vertex, std::vector<seqan3::dna5>, std::hash<Vertex>> vertex2read) : graph_(std::move(graph)), args(args), read2vertex_(std::move(read2vertex)), vertex2read_(std::move(vertex2read)) {}
 
@@ -28,15 +34,26 @@ std::vector<std::vector<seqan3::dna5>> ReadCorrection::get_low_frequency_reads(c
     return low_frequency_reads;
 }
 
-void ReadCorrection::correction_process(const std::vector<std::vector<seqan3::dna5>>& low_count_reads, int w) {
-    std::vector<Vertex> isolated_node_ids;
+void ReadCorrection::correction_isolates(){
+    // Compute connected components
+    // std::vector<int> component(num_vertices(graph_));
+    // int num_components = connected_components(graph_, &component[0]);
 
+    // // Collect isolated vertices
+    // std::vector<int> isolated_vertices;
+    // for (int i = 0; i < num_vertices(graph_); ++i) {
+    //     if (component[i] == i) {
+    //         isolated_vertices.push_back(i);
+    //     }
+    // }
+
+}
+
+void ReadCorrection::correction_process(const std::vector<std::vector<seqan3::dna5>>& low_count_reads, int w) {
     for (const auto& read : low_count_reads) {
         auto cur_id = read2vertex_[read];
 
-        if (is_isolated(cur_id)) {
-            isolated_node_ids.push_back(cur_id);
-        } else {
+        if (!is_isolated(cur_id)) {
             auto connected_nodes = get_connected_nodes_with_weight(cur_id, w);
             int edge_num = connected_nodes.size();
 
@@ -104,5 +121,6 @@ void ReadCorrection::correction_main(const std::map<std::vector<seqan3::dna5>, u
     for (int w_i = 1; w_i <= args.max_edit_dis; w_i++){
         correction_process(low_count_reads, w_i);
     }
-    
+
+    // correction_isolates();
 }

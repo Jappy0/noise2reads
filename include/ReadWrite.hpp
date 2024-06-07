@@ -20,7 +20,7 @@ class ReadWrite{
     public:
         ReadWrite(ArgsType args);//constructor
         ~ReadWrite(); //deconstructor
-        std::tuple<std::vector<std::vector<seqan3::dna5>>, std::map<std::vector<seqan3::dna5>, uint32_t>, unsigned> get_unique_reads_counts();
+        std::tuple<std::vector<std::vector<seqan3::dna5>>, std::map<std::vector<seqan3::dna5>, uint32_t>, std::map<std::vector<seqan3::dna5>, std::vector<std::string>>, unsigned> get_unique_reads_counts();
     private:
         // graph_arguments args;
         ArgsType args;

@@ -104,14 +104,13 @@ int main(int argc, char** argv) {
         args.num_process = std::min(std::max(args.num_process, 1), available_cores);
         Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("The number of threads: %1% ") % args.num_process));
         ////////////////////////////////////////////////////////////
-        ReadWrite<Args_Type> read_write(args);
-        auto [unique_reads, read2count, min_read_length] = ReadWrite<Args_Type>(args).get_unique_reads_counts();
+        auto [unique_reads, read2count, read2ids, min_read_length] = ReadWrite<Args_Type>(args).get_unique_reads_counts();
         args.read_length = min_read_length;
         auto total_uniq_num = unique_reads.size();
         Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("The number of unique reads: %1%, minimum read length: %2%.") % total_uniq_num % min_read_length));
         //////////////////////////////////////////////////////////////
         Graph nt_ed_graph;
-        GraphConstructor<Args_Type> graph_constructor(read2count, args);
+        GraphConstructor<Args_Type> graph_constructor(read2count, read2ids, args);
         if (args.pair_wise) {
             nt_ed_graph = graph_constructor.construt_graph_via_pairwise_comparison(unique_reads);
             if (args.save_graph){
@@ -151,13 +150,12 @@ int main(int argc, char** argv) {
         Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("The number of threads: %1% ") % args.num_process));
 
         ////////////////////////////////////////////////////////////
-        // ReadWrite<Args_Type> read_write(args);
-        auto [unique_reads, read2count, min_read_length] = ReadWrite<Args_Type>(args).get_unique_reads_counts();
+        auto [unique_reads, read2count, read2ids, min_read_length] = ReadWrite<Args_Type>(args).get_unique_reads_counts();
         args.read_length = min_read_length;
         auto total_uniq_num = unique_reads.size();
         Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("The number of unique reads: %1%, minimum read length: %2%.") % total_uniq_num % min_read_length));
         //////////////////////////////////////////////////////////////
-        GraphConstructor<Args_Type> graph_constructor(read2count, args);
+        GraphConstructor<Args_Type> graph_constructor(read2count, read2ids, args);
         if (args.pair_wise) {
             graph_constructor.construt_graph_via_pairwise_comparison(unique_reads);
             if (args.save_graph){

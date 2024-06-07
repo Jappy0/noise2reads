@@ -44,6 +44,7 @@ using namespace boost;
 struct VertexProperties {
     std::vector<seqan3::dna5> read;
     uint32_t count;
+    std::vector<std::string> ids;
 };
 
 struct EdgeProperties {
@@ -118,7 +119,7 @@ template<typename ArgsType>
 class GraphConstructor
 {
 public:
-    GraphConstructor(std::map<std::vector<seqan3::dna5>, uint32_t> read2count, ArgsType args);
+    GraphConstructor(std::map<std::vector<seqan3::dna5>, uint32_t> read2count, std::map<std::vector<seqan3::dna5>, std::vector<std::string>> read2ids, ArgsType args);
     
     void init_graph();
     void insert_edge(std::vector<seqan3::dna5> read1, std::vector<seqan3::dna5> read2, int edit_dis);
@@ -143,11 +144,13 @@ public:
 private:
     // std::unordered_map<std::uint64_t, std::vector<std::vector<seqan3::dna5>>> key2reads_;
     std::map<std::vector<seqan3::dna5>, uint32_t> read2count_;
+    std::map<std::vector<seqan3::dna5>, std::vector<std::string>> read2ids_;
     // graph_arguments args;
     ArgsType args;
     std::filesystem::path graph_full_path_;
     std::unordered_map<std::vector<seqan3::dna5>, Vertex, std::hash<std::vector<seqan3::dna5>>> read2vertex_;
     std::unordered_map<Vertex, std::vector<seqan3::dna5>, std::hash<Vertex>> vertex2read_;
+
     Graph graph_;
 };
 

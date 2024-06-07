@@ -1,7 +1,7 @@
 // GraphConstructor.tpp
 
 template<typename ArgsType>
-GraphConstructor<ArgsType>::GraphConstructor(std::map<std::vector<seqan3::dna5>, uint32_t> read2count, ArgsType args) : read2count_(std::move(read2count)), args(args) {}
+GraphConstructor<ArgsType>::GraphConstructor(std::map<std::vector<seqan3::dna5>, uint32_t> read2count, std::map<std::vector<seqan3::dna5>, std::vector<std::string>> read2ids, ArgsType args) : read2count_(std::move(read2count)), read2ids_(std::move(read2ids)), args(args) {}
 
 template<typename ArgsType>
 void GraphConstructor<ArgsType>::init_graph()
@@ -10,7 +10,7 @@ void GraphConstructor<ArgsType>::init_graph()
     for (const auto& pair : read2count_) {
         const auto& read = pair.first;
         const auto& count = pair.second;
-        auto v = boost::add_vertex({read, count}, graph_);
+        auto v = boost::add_vertex({read, count, read2ids_[read]}, graph_);//
         read2vertex_[read] = v;
         vertex2read_[v] = read;
     }
