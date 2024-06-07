@@ -11,7 +11,8 @@
 #include <getopt.h>
 #include <vector>
 #include <functional>
-#include <sharg/all.hpp> // includes all necessary headers
+#include <sharg/all.hpp> 
+#pragma once
 
 #define noise2reads_VERSION "0.1.0"
 #define last_update_date "07.06.2024"
