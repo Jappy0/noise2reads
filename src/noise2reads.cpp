@@ -13,6 +13,8 @@
 #include "MinimizerGenerator.hpp"
 #include "GraphConstructor.hpp"
 #include "OMH.hpp"
+#include "ReadCorrection.hpp"
+#include "Parser.hpp"
 
 #include <time.h>
 #include <stdlib.h>
@@ -34,7 +36,7 @@
 #include <seqan3/utility/views/all.hpp> // optional: use views to convert the input string to a dna5 sequence
 #include <seqan3/io/sequence_file/all.hpp>
 // #include <seqan3/std/filesystem>
-
+#include <boost/format.hpp>
 #include <omp.h>
 
 using namespace std;
@@ -54,7 +56,7 @@ int main(int argc, char** argv) {
     //////////////////
     // Declare and define a global variable for available cores
     int available_cores = omp_get_max_threads();
-    Utils::getInstance().logger(LOG_LEVEL_DEBUG,  std::format("The maximum number of CPU cores available: {} ", available_cores));
+    Utils::getInstance().logger(LOG_LEVEL_DEBUG, boost::str(boost::format("The maximum number of threads available: %1% ") % available_cores));
     /////////////////////////////////////////////////////////////////
     sharg::parser top_level_parser{"noise2reads", argc, argv, sharg::update_notifications::off, {"umi", "read", "graph"}};
 
@@ -86,12 +88,54 @@ int main(int argc, char** argv) {
             
         
     } else if (sub_parser.info.app_name == std::string_view{"noise2reads-read"}){
+        using Args_Type = read_arguments;
+        Args_Type args;
+        Parser<Args_Type>().read_parser(sub_parser, args);
+        try
+        {
+            sub_parser.parse(); // trigger command line parsing
+        }
+        catch (sharg::parser_error const & ext) // catch user errors
+        {
+            std::cerr << "[Invalid Options] " << ext.what() << "\n"; // customise your error message
+            return -1;
+        }
 
+        args.num_process = std::min(std::max(args.num_process, 1), available_cores);
+        Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("The number of threads: %1% ") % args.num_process));
+        ////////////////////////////////////////////////////////////
+        ReadWrite<Args_Type> read_write(args);
+        auto [unique_reads, read2count, min_read_length] = ReadWrite<Args_Type>(args).get_unique_reads_counts();
+        args.read_length = min_read_length;
+        auto total_uniq_num = unique_reads.size();
+        Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("The number of unique reads: %1%, minimum read length: %2%.") % total_uniq_num % min_read_length));
+        //////////////////////////////////////////////////////////////
+        Graph nt_ed_graph;
+        GraphConstructor<Args_Type> graph_constructor(read2count, args);
+        if (args.pair_wise) {
+            nt_ed_graph = graph_constructor.construt_graph_via_pairwise_comparison(unique_reads);
+            if (args.save_graph){
+                graph_constructor.save_graph();
+            }
+        } else {
+            // minimizer grouping first and then omh
+            MinimizerGenerator<Args_Type> minimizer_generator(args);
+            auto betterParams = minimizer_generator.possibleBetterParameters();
+            auto hash2reads = minimizer_generator.minimizer2reads_main(unique_reads, betterParams);  
+
+            nt_ed_graph = graph_constructor.construct_graph(hash2reads);
+            if (args.save_graph){
+                graph_constructor.save_graph();
+            }
+        }
+        //////////////////////////////////////////////////////////////
+        ReadCorrection read_correction(nt_ed_graph, args, graph_constructor.get_read2vertex(), graph_constructor.get_vertex2read());
+        read_correction.correction_main(read2count);
+        //////////////////////////////////////////////////////////////
     } else if (sub_parser.info.app_name == std::string_view{"noise2reads-graph"}){
         using Args_Type = graph_arguments;
         Args_Type args;
-        Utils::getInstance().graph_parser(sub_parser, args);
-
+        Parser<Args_Type>().graph_parser(sub_parser, args);
         try
         {
             sub_parser.parse(); // trigger command line parsing
@@ -104,15 +148,14 @@ int main(int argc, char** argv) {
         ////////////////////////////////////////////////////////////////////////////
         // Ensure the user-specified number of cores is within a valid range
         args.num_process = std::min(std::max(args.num_process, 1), available_cores);
-        // std::cout << "The number of threads :" << num_cores_to_use << std::endl;
-        Utils::getInstance().logger(LOG_LEVEL_INFO,  std::format("The number of threads: {} ", args.num_process));
+        Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("The number of threads: %1% ") % args.num_process));
 
         ////////////////////////////////////////////////////////////
         // ReadWrite<Args_Type> read_write(args);
         auto [unique_reads, read2count, min_read_length] = ReadWrite<Args_Type>(args).get_unique_reads_counts();
         args.read_length = min_read_length;
         auto total_uniq_num = unique_reads.size();
-        Utils::getInstance().logger(LOG_LEVEL_INFO,  std::format("The number of unique reads: {}, minimum read length: {}.", total_uniq_num, min_read_length));
+        Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("The number of unique reads: %1%, minimum read length: %2%.") % total_uniq_num % min_read_length));
         //////////////////////////////////////////////////////////////
         GraphConstructor<Args_Type> graph_constructor(read2count, args);
         if (args.pair_wise) {

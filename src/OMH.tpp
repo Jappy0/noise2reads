@@ -1,4 +1,7 @@
 // OMH.tpp
+
+#include "OMH.hpp"
+
 template<typename ArgsType>
 OMH<ArgsType>::OMH(ArgsType args) : args(args) {}
 
@@ -10,16 +13,16 @@ unsigned OMH<ArgsType>::omh_k(unsigned L, double p, uint8_t d) {
     if (args.read_length >= 6 && args.read_length < 50){
         auto omh_kmer_n = args.read_length- 2 * args.omh_k + 1;
         if (omh_kmer_n < 3 ){
-            Utils::getInstance().logger(LOG_LEVEL_WARNING,  std::format("only {} kmers setted for gOMH selection.", omh_kmer_n));
+            Utils::getInstance().logger(LOG_LEVEL_WARNING, boost::str(boost::format("only %1% kmers setted for gOMH selection.") % omh_kmer_n));
         }        
         k = args.omh_k;
     } else if (args.read_length >= 50 && args.read_length <= 300){
         k = ceil(((1-p)*(2+L))/(d+2-2*p));
         if (k < 4){
-            Utils::getInstance().logger(LOG_LEVEL_WARNING, std::format("Estimated k={} has been changed to 4.", k));
+            Utils::getInstance().logger(LOG_LEVEL_WARNING, boost::str(boost::format("Estimated k=%1% has been changed to 4.") % k));
             k = 4;
         } else if (k > 27) {
-            Utils::getInstance().logger(LOG_LEVEL_WARNING, std::format("Estimated k={} has been changed to 27.", k)); 
+            Utils::getInstance().logger(LOG_LEVEL_WARNING, boost::str(boost::format("Estimated k=%1% has been changed to 27.") % k)); 
             k = 27;               
         }   
     }

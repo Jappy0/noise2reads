@@ -38,7 +38,7 @@ std::unordered_map<std::uint64_t, std::vector<std::vector<seqan3::dna5>>> Minimi
         }
     }
 
-    Utils::getInstance().logger(LOG_LEVEL_DEBUG,  std::format("Size of minimiser_to_reads: {}.", minimiser_to_reads.size()));  
+    Utils::getInstance().logger(LOG_LEVEL_DEBUG, boost::str(boost::format("Size of minimiser_to_reads: %1%!") % minimiser_to_reads.size())); 
     return minimiser_to_reads;     
 }
 
@@ -102,11 +102,11 @@ std::tuple<unsigned, unsigned, unsigned, double> MinimizerGenerator<ArgsType>::p
         betterW = round(args.read_length/betterN);
         betterK = kSize(betterW, args.bad_kmer_ratio);
         if (betterK < 4){
-            Utils::getInstance().logger(LOG_LEVEL_WARNING, std::format("Estimated k={} has been changed to 4.", betterK));
+            Utils::getInstance().logger(LOG_LEVEL_WARNING, boost::str(boost::format("Estimated k=%1% has been changed to 4.") % betterK));
             betterK = 4;
         } else 
         if (betterK >= 28) {
-            Utils::getInstance().logger(LOG_LEVEL_WARNING, std::format("Estimated k={} has been changed to 27 as the maximum size of unggaped shape is stricted by 28 in Seqan3.", betterK));  
+            Utils::getInstance().logger(LOG_LEVEL_WARNING, boost::str(boost::format("Estimated k=%1% has been changed to 27 as the maximum size of unggaped shape is stricted by 28 in Seqan3.") % betterK));  
             betterK = 27;             
         }
     } 
@@ -120,13 +120,13 @@ std::tuple<unsigned, unsigned, unsigned, double> MinimizerGenerator<ArgsType>::p
     // }
     if (args.read_length >= 50 && args.read_length <= 300){
         p = 1 - std::pow(proba(betterW, betterK), betterN);
-        Utils::getInstance().logger(LOG_LEVEL_INFO,  std::format("Estimated number of windows: {}, Estimated window size: {}, Estimated K: {} and the probability: {}.", betterN, betterW, betterK, p)); 
+        Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("Estimated number of windows: %1%, Estimated window size: %2%, Estimated K: %3% and the probability: %4%.") % betterN % betterW % betterK % p)); 
     } else {
-        Utils::getInstance().logger(LOG_LEVEL_INFO,  std::format("Number of windows: {}, Window size: {}, K size: {}.", betterN, betterW, betterK));         
+        Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("Number of windows: %1%, Window size: %2%, K size: %3%.") % betterN % betterW % betterK));        
     }
     auto number_kmer = betterW - betterK + 1;
     if ((number_kmer) < 3 ){
-        Utils::getInstance().logger(LOG_LEVEL_WARNING,  std::format("only {} kmers setted for minimizer selection.", number_kmer));
+        Utils::getInstance().logger(LOG_LEVEL_WARNING, boost::str(boost::format("only %1% kmers setted for minimizer selection.") % number_kmer));
     }
 
     return std::make_tuple(betterN, betterW, betterK, p);   

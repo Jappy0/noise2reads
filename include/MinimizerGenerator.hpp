@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <iostream>
 #include <type_traits> // for std::decay_t
+#include <boost/format.hpp>
 
 using namespace std;
 using namespace seqan3::literals;

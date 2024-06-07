@@ -10,11 +10,11 @@ include_directories(include)
 # Add your source files
 set(SOURCES
     LoggingLevels.cpp
-    Utils.tpp
     ReadWrite.tpp
     MinimizerGenerator.tpp
     OMH.tpp
     GraphConstructor.tpp
+    ReadCorrection.cpp
     noise2reads.cpp
 )
 

@@ -34,6 +34,7 @@
 #include <seqan3/alphabet/views/to_rank.hpp>
 #include <omp.h>
 #include <deque>
+#include <boost/format.hpp>
 
 using namespace std;
 using namespace seqan3::literals;
@@ -117,19 +118,27 @@ template<typename ArgsType>
 class GraphConstructor
 {
 public:
-    // GraphConstructor(std::map<std::vector<seqan3::dna5>, uint32_t> read2count, graph_arguments args);
     GraphConstructor(std::map<std::vector<seqan3::dna5>, uint32_t> read2count, ArgsType args);
     
     void init_graph();
     void insert_edge(std::vector<seqan3::dna5> read1, std::vector<seqan3::dna5> read2, int edit_dis);
     std::vector<std::vector<seqan3::dna5>> mergeUniqueReads(const std::vector<std::vector<std::vector<seqan3::dna5>>>& read_vectors);
-    void construct_graph(std::unordered_map<std::uint64_t, std::vector<std::vector<seqan3::dna5>>> key2reads);
+    Graph construct_graph(std::unordered_map<std::uint64_t, std::vector<std::vector<seqan3::dna5>>> key2reads);
     void update_graph_omh(std::vector<std::vector<seqan3::dna5>> unique_reads);
     void visitNeighborsWithThreshold(const Graph& g, Vertex node, int distance_threshold, int current_distance, std::vector<Vertex>& indirect_neighbors, std::vector<bool>& visited);
     std::vector<Vertex> visitNeighborsOfNeighborsWithThreshold(const Graph& g, Vertex node, int distance_threshold);
     void save_graph() const;
     void edge_summary();
-    void construt_graph_via_pairwise_comparison(std::vector<std::vector<seqan3::dna5>> unique_reads);
+    Graph construt_graph_via_pairwise_comparison(std::vector<std::vector<seqan3::dna5>> unique_reads);
+    
+    // Define your constructor and other member functions here
+    std::unordered_map<std::vector<seqan3::dna5>, Vertex, std::hash<std::vector<seqan3::dna5>>> get_read2vertex() const {
+        return read2vertex_;
+    }
+
+    std::unordered_map<Vertex, std::vector<seqan3::dna5>, std::hash<Vertex>> get_vertex2read() const {
+        return vertex2read_;
+    }
 
 private:
     // std::unordered_map<std::uint64_t, std::vector<std::vector<seqan3::dna5>>> key2reads_;

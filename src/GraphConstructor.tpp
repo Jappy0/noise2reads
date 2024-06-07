@@ -43,14 +43,14 @@ void GraphConstructor<ArgsType>::edge_summary(){
     // Output the counts of edges with the same weights
     for (const auto& [weight, count] : weight_counts) {
         // std::cout << "Number of edges with weight " << weight << ": " << count << std::endl;
-        Utils::getInstance().logger(LOG_LEVEL_INFO,  std::format("The number of edges with weight of {}: {}.", weight, count));
+        Utils::getInstance().logger(LOG_LEVEL_INFO,  boost::str(boost::format("The number of edges with weight of %1%: %2%.") % weight % count));
         edge_num += count;
     }
-    Utils::getInstance().logger(LOG_LEVEL_INFO,  std::format("The total number of edges: {}.", edge_num));
+    Utils::getInstance().logger(LOG_LEVEL_INFO,  boost::str(boost::format("The total number of edges: %1%.") % edge_num ));
 }
 
 template<typename ArgsType>
-void GraphConstructor<ArgsType>::construct_graph(std::unordered_map<std::uint64_t, std::vector<std::vector<seqan3::dna5>>> key2reads)
+Graph GraphConstructor<ArgsType>::construct_graph(std::unordered_map<std::uint64_t, std::vector<std::vector<seqan3::dna5>>> key2reads)
 {
     init_graph();
 
@@ -69,13 +69,13 @@ void GraphConstructor<ArgsType>::construct_graph(std::unordered_map<std::uint64_
             #pragma omp critical
             {
                 // std::cout << cur_read_num << " ";
-                Utils::getInstance().logger(LOG_LEVEL_DEBUG,  std::format("{} ", cur_read_num));
+                // Utils::getInstance().logger(LOG_LEVEL_DEBUG,  std::format("{} ", cur_read_num));
                 medium_group.emplace_back(reads_vec);
             } 
         } else {
             #pragma omp critical
             {
-                Utils::getInstance().logger(LOG_LEVEL_DEBUG,  std::format("{} ", cur_read_num));
+                // Utils::getInstance().logger(LOG_LEVEL_DEBUG,  std::format("{} ", cur_read_num));
                 large_group.emplace_back(reads_vec); 
                 // large_group.emplace_back(reads_vec);   
             }
@@ -122,7 +122,7 @@ void GraphConstructor<ArgsType>::construct_graph(std::unordered_map<std::uint64_
         Utils::getInstance().logger(LOG_LEVEL_INFO,  "Pairwise comparison for the small- or medium-size-based buckets done!");       
     } else {
         // Utils::getInstance().logger(LOG_LEVEL_INFO,  "No bucket has a size larger than 100!");
-        Utils::getInstance().logger(LOG_LEVEL_INFO,  format("No bucket with size between 2 and {}!", args.bin_size_max));
+        Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("No bucket with size between 2 and %1%!") % args.bin_size_max));
     }
     edge_summary();
     // if (args.read_length < 16){
@@ -157,7 +157,7 @@ void GraphConstructor<ArgsType>::construct_graph(std::unordered_map<std::uint64_
             for (unsigned int cur_d = d_t; cur_d >= 1; cur_d--) {
                 for (unsigned j = 0; j < times; ++j) {
                     std::uint64_t cur_seed = distribution(generator);
-                    std::uint64_t cur_k = OMH(args).omh_k(args.read_length, args.probability, cur_d);
+                    std::uint64_t cur_k = OMH<ArgsType>(args).omh_k(args.read_length, args.probability, cur_d);
                     std::pair<std::uint64_t, unsigned> cur_pair = std::make_pair(cur_seed, cur_k);
                     seeds_k.push_back(cur_pair);                   
                 } 
@@ -180,12 +180,12 @@ void GraphConstructor<ArgsType>::construct_graph(std::unordered_map<std::uint64_
             }
             /////////////////////////////////////////////////////
         } else {
-            Utils::getInstance().logger(LOG_LEVEL_ERROR,  std::format("min_edit_dis({}) should not larger than max_edit_dis({}) ", args.min_edit_dis, args.max_edit_dis));
+            Utils::getInstance().logger(LOG_LEVEL_ERROR, boost::str(boost::format("min_edit_dis(%1%) should not be larger than max_edit_dis(%2%)") % args.min_edit_dis % args.max_edit_dis));
         }
 
         #pragma omp parallel for num_threads(args.num_process) schedule(dynamic)
         for (const auto &el_group : large_group){
-            auto cur_hash2reads = OMH(args).omh2read_main(el_group, seeds_k);
+            auto cur_hash2reads = OMH<ArgsType>(args).omh2read_main(el_group, seeds_k);
             auto cur_bin_n = cur_hash2reads.size();
             #pragma omp parallel for num_threads(args.num_process) schedule(static)
             for (auto i = 0u; i < cur_bin_n; ++i) {
@@ -198,7 +198,7 @@ void GraphConstructor<ArgsType>::construct_graph(std::unordered_map<std::uint64_
                     #pragma omp critical
                     {
                         // std::cout << cur_num << " ";
-                        Utils::getInstance().logger(LOG_LEVEL_DEBUG,  std::format("{} ", cur_num));
+                        // Utils::getInstance().logger(LOG_LEVEL_DEBUG,  std::format("{} ", cur_num));
                         m_group.emplace_back(cur_reads_vec);
                     } 
                 } else {
@@ -250,7 +250,7 @@ void GraphConstructor<ArgsType>::construct_graph(std::unordered_map<std::uint64_
         //////////////////////////////////////////////////////////////////////////////////////////////
         if (l_group.size() > 0){
             auto unique_reads = mergeUniqueReads(l_group);
-            Utils::getInstance().logger(LOG_LEVEL_INFO,   std::format("The number of remaining unprocessed unique reads: {} ", unique_reads.size()));
+            Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("The number of remaining unprocessed unique reads: %1%") % unique_reads.size()));
             //////////////////////////
             // Method 1
             std::vector<std::pair<int, int>> v_pairs;
@@ -299,10 +299,11 @@ void GraphConstructor<ArgsType>::construct_graph(std::unordered_map<std::uint64_
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     if (args.min_edit_dis > 1 && args.read_length >= 50) {
         remove_edges_in_interval(graph_, 1, args.min_edit_dis - 1);
-        Utils::getInstance().logger(LOG_LEVEL_INFO,  std::format("Graph update for removing the edges with weights less than {}.", args.min_edit_dis));
+        Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("Graph update for removing the edges with weights less than %1%.") % args.min_edit_dis));
     }
     Utils::getInstance().logger(LOG_LEVEL_INFO,  "Edit-distance-based read graph construction done!");
     edge_summary();
+    return graph_;
 }
 
 template<typename ArgsType>
@@ -327,7 +328,7 @@ void GraphConstructor<ArgsType>::update_graph_omh(std::vector<std::vector<seqan3
         for (unsigned int cur_d = d_t; cur_d >= 1; cur_d--) {
             for (unsigned j = 0; j < times; ++j) {
                 std::uint64_t cur_seed = distribution(generator);
-                std::uint64_t cur_k = OMH(args).omh_k(args.read_length, args.probability, cur_d);
+                std::uint64_t cur_k = OMH<ArgsType>(args).omh_k(args.read_length, args.probability, cur_d);
                 std::pair<std::uint64_t, unsigned> cur_pair = std::make_pair(cur_seed, cur_k);
                 seeds_k.push_back(cur_pair);                   
             } 
@@ -352,10 +353,10 @@ void GraphConstructor<ArgsType>::update_graph_omh(std::vector<std::vector<seqan3
         /////////////////////////////////////////////////////
 
     } else {
-        Utils::getInstance().logger(LOG_LEVEL_ERROR,  std::format("min_edit_dis({}) should not larger than max_edit_dis({}) ", args.min_edit_dis, args.max_edit_dis));
+        Utils::getInstance().logger(LOG_LEVEL_ERROR, boost::str(boost::format("min_edit_dis(%1%) should not be larger than max_edit_dis(%2%)") % args.min_edit_dis % args.max_edit_dis));
     }
 
-    auto cur_hash2reads = OMH(args).omh2read_main(unique_reads, seeds_k);
+    auto cur_hash2reads = OMH<ArgsType>(args).omh2read_main(unique_reads, seeds_k);
     args.omh_flag = false; // make this flag false after using omh2read_main
     auto cur_bin_n = cur_hash2reads.size();
 
@@ -372,7 +373,7 @@ void GraphConstructor<ArgsType>::update_graph_omh(std::vector<std::vector<seqan3
             #pragma omp critical
             {
                 // std::cout << cur_num << " ";
-                Utils::getInstance().logger(LOG_LEVEL_DEBUG,  std::format("{} ", cur_num));
+                // Utils::getInstance().logger(LOG_LEVEL_DEBUG,  std::format("{} ", cur_num));
                 m_group.emplace_back(cur_reads_vec);
             } 
         } else {
@@ -421,7 +422,7 @@ void GraphConstructor<ArgsType>::update_graph_omh(std::vector<std::vector<seqan3
     //////////////////////////////////////////////////////////////////////////////////////////////
     if (l_group.size() > 0){
         auto unique_reads = mergeUniqueReads(l_group);
-        Utils::getInstance().logger(LOG_LEVEL_INFO,   std::format("The number of remaining unprocessed unique reads: {} ", unique_reads.size()));
+        Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("The number of remaining unprocessed unique reads: %1%") % unique_reads.size()));
         //////////////////////////
         // Method 1
         std::vector<std::pair<int, int>> v_pairs;
@@ -585,7 +586,7 @@ void GraphConstructor<ArgsType>::save_graph() const {
 }
 
 template<typename ArgsType>
-void GraphConstructor<ArgsType>::construt_graph_via_pairwise_comparison(std::vector<std::vector<seqan3::dna5>> unique_reads)
+Graph GraphConstructor<ArgsType>::construt_graph_via_pairwise_comparison(std::vector<std::vector<seqan3::dna5>> unique_reads)
 {
     init_graph();
 
@@ -616,9 +617,5 @@ void GraphConstructor<ArgsType>::construt_graph_via_pairwise_comparison(std::vec
     }
     Utils::getInstance().logger(LOG_LEVEL_INFO,  "Constructing edit-distance-based read graph via pairwise comparisons done!");
     edge_summary();
+    return graph_;
 }
-
-// void GraphConstructor::construct_graph_main(std::unordered_map<std::uint64_t, std::vector<std::vector<seqan3::dna5>>> key2reads)
-// {
-
-// }
