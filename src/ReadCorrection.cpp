@@ -34,35 +34,31 @@ std::vector<std::vector<seqan3::dna5>> ReadCorrection::get_low_frequency_reads(c
     return low_frequency_reads;
 }
 
-void ReadCorrection::correction_isolates(){
-    // Compute connected components
-    // std::vector<int> component(num_vertices(graph_));
-    // int num_components = connected_components(graph_, &component[0]);
-
-    // // Collect isolated vertices
-    // std::vector<int> isolated_vertices;
-    // for (int i = 0; i < num_vertices(graph_); ++i) {
-    //     if (component[i] == i) {
-    //         isolated_vertices.push_back(i);
-    //     }
-    // }
+void ReadCorrection::correction_isolates(const std::map<std::vector<seqan3::dna5>, uint32_t>& read2count){
+    std::vector<Vertex> isolates;
+    for (const auto& pair : read2count) {
+        auto cur_vertex = read2vertex_[pair.first];
+        if (is_isolated(cur_vertex)){
+            isolates.push_back(cur_vertex);
+        }
+    }
 
 }
 
 void ReadCorrection::correction_process(const std::vector<std::vector<seqan3::dna5>>& low_count_reads, int w) {
     for (const auto& read : low_count_reads) {
-        auto cur_id = read2vertex_[read];
+        auto cur_vertex = read2vertex_[read];
 
-        if (!is_isolated(cur_id)) {
-            auto connected_nodes = get_connected_nodes_with_weight(cur_id, w);
+        if (!is_isolated(cur_vertex)) {
+            auto connected_nodes = get_connected_nodes_with_weight(cur_vertex, w);
             int edge_num = connected_nodes.size();
 
             if (edge_num == 1) {
                 Vertex neighbor = connected_nodes[0];
                 if (graph_[neighbor].count > args.freq_thresh) {
-                    graph_[neighbor].count += graph_[cur_id].count;
-                    boost::clear_vertex(cur_id, graph_);
-                    boost::remove_vertex(cur_id, graph_);
+                    graph_[neighbor].count += graph_[cur_vertex].count;
+                    boost::clear_vertex(cur_vertex, graph_);
+                    boost::remove_vertex(cur_vertex, graph_);
                 }
             } else if (edge_num >= 2) {
                 std::vector<Vertex> eligible_nodes;
@@ -76,9 +72,9 @@ void ReadCorrection::correction_process(const std::vector<std::vector<seqan3::dn
 
                 if (eligible_nodes.size() == 1) {
                     Vertex target = eligible_nodes[0];
-                    graph_[target].count += graph_[cur_id].count;
-                    boost::clear_vertex(cur_id, graph_);
-                    boost::remove_vertex(cur_id, graph_);
+                    graph_[target].count += graph_[cur_vertex].count;
+                    boost::clear_vertex(cur_vertex, graph_);
+                    boost::remove_vertex(cur_vertex, graph_);
                 } else if (!eligible_nodes.empty()) {
                     // Sort eligible_nodes by their count in descending order
                     std::sort(eligible_nodes.begin(), eligible_nodes.end(), 
@@ -86,7 +82,7 @@ void ReadCorrection::correction_process(const std::vector<std::vector<seqan3::dn
                                   return graph_[a].count > graph_[b].count;
                               });
 
-                    int original_count = graph_[cur_id].count;
+                    int original_count = graph_[cur_vertex].count;
                     int remaining_count = original_count;
 
                     for (Vertex node : eligible_nodes) {
@@ -105,8 +101,8 @@ void ReadCorrection::correction_process(const std::vector<std::vector<seqan3::dn
                         graph_[highest_count_node].count += remaining_count;
                     }
 
-                    boost::clear_vertex(cur_id, graph_);
-                    boost::remove_vertex(cur_id, graph_);
+                    boost::clear_vertex(cur_vertex, graph_);
+                    boost::remove_vertex(cur_vertex, graph_);
                 }
             }
         }
@@ -122,5 +118,5 @@ void ReadCorrection::correction_main(const std::map<std::vector<seqan3::dna5>, u
         correction_process(low_count_reads, w_i);
     }
 
-    // correction_isolates();
+    correction_isolates(read2count);
 }
