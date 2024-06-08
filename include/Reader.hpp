@@ -71,13 +71,14 @@ std::tuple<std::vector<std::vector<seqan3::dna5>>, std::map<std::vector<seqan3::
         std::vector<seqan3::dna5> cur_seq = record.sequence();
         std::string cur_id = std::string{record.id()};
         size_t pos = cur_id.find_first_of(" \t"); // Find the first whitespace character
+
         if (pos != std::string::npos) {
             std::string description = cur_id.substr(pos + 1); // Extract the description
             cur_id = cur_id.substr(0, pos); // Extract the identifier
             id2description_[cur_id] = description;
         }
 
-        read2ids[cur_seq].push_back(record.id());
+        read2ids[cur_seq].push_back(cur_id);
 
         std::vector<seqan3::phred42> cur_qual = record.base_qualities();
         id2quality_[cur_id] = cur_qual;

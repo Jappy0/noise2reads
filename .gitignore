@@ -3,3 +3,4 @@ CMakeFiles/
 build/
 example/
 bin/
+*log

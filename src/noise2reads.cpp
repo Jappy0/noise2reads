@@ -76,20 +76,13 @@ int main(int argc, char** argv) {
         std::cerr << "[Error] " << ext.what() << "\n"; // customise your error message
         return -1;
     }
-    //////////////////////////////////////////////////////////////
 
-
-    //////////////////////////////////////////////////
-    // hold a reference to the sub_parser
     sharg::parser & sub_parser = top_level_parser.get_sub_parser();
- 
-    // std::cout << "Proceed to sub parser.\n";
-    //////////////////////////////////////////////////////////////////
-    if (sub_parser.info.app_name == std::string_view{"noise2reads-umi"}){
-            
-        
-    } else if (sub_parser.info.app_name == std::string_view{"noise2reads-read"}){
-        using Args_Type = read_arguments;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////
+
+    if (sub_parser.info.app_name == std::string_view{"noise2reads-umi"} || sub_parser.info.app_name == std::string_view{"noise2reads-read"}){
+        using Args_Type = std::conditional_t<std::is_same_v<decltype(sub_parser.info.app_name), std::string_view>, umi_arguments, read_arguments>;
         Args_Type args;
         Parser<Args_Type>().read_parser(sub_parser, args);
         try
@@ -104,7 +97,8 @@ int main(int argc, char** argv) {
 
         args.num_process = std::min(std::max(args.num_process, 1), available_cores);
         Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("The number of threads: %1% ") % args.num_process));
-        ////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////
+        // construct an undirected edit-distance-based read graph
         Reader<Args_Type> reader(args);
         auto [unique_reads, read2count, read2ids, min_read_length] = reader.get_unique_reads_counts();
         args.read_length = min_read_length;
@@ -129,7 +123,7 @@ int main(int argc, char** argv) {
                 graph_constructor.save_graph();
             }
         }
-        //////////////////////////////////////////////////////////////
+
         ReadCorrection read_correction(nt_ed_graph, args, graph_constructor.get_read2vertex(), graph_constructor.get_vertex2read());
         read_correction.correction_main(read2count);
         Graph update_ed_graph = read_correction.get_graph();
@@ -137,7 +131,7 @@ int main(int argc, char** argv) {
         auto id2quality = reader.get_id2quality();
         auto id2description = reader.get_id2description();
         OutputWriter<Args_Type>(args).write_graph2dataset(std::move(update_ed_graph), id2quality, id2description);
-        //////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////            
     } else if (sub_parser.info.app_name == std::string_view{"noise2reads-graph"}){
         using Args_Type = graph_arguments;
         Args_Type args;
@@ -180,7 +174,6 @@ int main(int argc, char** argv) {
                 graph_constructor.save_graph();
             }
         }
-
         ////////////////////////////////////////////////////////////////////////////
     } else {
         std::cout << "Unhandled subparser named " << sub_parser.info.app_name << '\n';
