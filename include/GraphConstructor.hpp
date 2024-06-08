@@ -6,7 +6,6 @@
 #include "OMH.hpp"
 #include "MinimizerGenerator.hpp"
 #include "LoggingLevels.hpp"
-#include "ReadWrite.hpp"
 
 #include <seqan3/core/debug_stream.hpp>
 #include <seqan3/search/all.hpp>
@@ -45,6 +44,16 @@ struct VertexProperties {
     std::vector<seqan3::dna5> read;
     uint32_t count;
     std::vector<std::string> ids;
+    // Method to add a single id
+    void add_id(const std::string& new_id) {
+        ids.push_back(new_id);
+    }
+
+    // Method to add multiple ids
+    void add_ids(const std::vector<std::string>& new_ids) {
+        ids.insert(ids.end(), new_ids.begin(), new_ids.end());
+    }
+
 };
 
 struct EdgeProperties {

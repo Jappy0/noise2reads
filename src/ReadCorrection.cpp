@@ -57,6 +57,7 @@ void ReadCorrection::correction_process(const std::vector<std::vector<seqan3::dn
                 Vertex neighbor = connected_nodes[0];
                 if (graph_[neighbor].count > args.freq_thresh) {
                     graph_[neighbor].count += graph_[cur_vertex].count;
+                    graph_[neighbor].add_ids(graph_[cur_vertex].ids);
                     boost::clear_vertex(cur_vertex, graph_);
                     boost::remove_vertex(cur_vertex, graph_);
                 }
@@ -73,6 +74,7 @@ void ReadCorrection::correction_process(const std::vector<std::vector<seqan3::dn
                 if (eligible_nodes.size() == 1) {
                     Vertex target = eligible_nodes[0];
                     graph_[target].count += graph_[cur_vertex].count;
+                    graph_[target].add_ids(graph_[cur_vertex].ids);
                     boost::clear_vertex(cur_vertex, graph_);
                     boost::remove_vertex(cur_vertex, graph_);
                 } else if (!eligible_nodes.empty()) {
@@ -92,13 +94,20 @@ void ReadCorrection::correction_process(const std::vector<std::vector<seqan3::dn
                         int added_count = std::round(remaining_count * proportion);
 
                         graph_[node].count += added_count;
+                        // add ids to the node
+                        std::vector<std::string> first_m_ids(graph_[cur_vertex].ids.begin(), graph_[cur_vertex].ids.begin() + added_count);
+                        graph_[cur_vertex].ids.erase(graph_[cur_vertex].ids.begin(), graph_[cur_vertex].ids.begin() + added_count);
+                        graph_[node].add_ids(first_m_ids);
+
                         remaining_count -= added_count;
                     }
 
                     // Assign any remaining count to the node with the highest count
                     if (remaining_count > 0) {
                         Vertex highest_count_node = eligible_nodes.front(); // First node has highest count
+                        
                         graph_[highest_count_node].count += remaining_count;
+                        graph_[highest_count_node].add_ids(graph_[cur_vertex].ids);
                     }
 
                     boost::clear_vertex(cur_vertex, graph_);
@@ -117,6 +126,67 @@ void ReadCorrection::correction_main(const std::map<std::vector<seqan3::dna5>, u
     for (int w_i = 1; w_i <= args.max_edit_dis; w_i++){
         correction_process(low_count_reads, w_i);
     }
-
     correction_isolates(read2count);
 }
+
+// std::string ReadCorrection::get_output_filename(std::string output_type) {
+//     std::filesystem::path input_path(args.input_data);
+//     std::filesystem::path output_path(args.output_dir);
+//     std::string output_filename = input_path.stem().string() + output_type + input_path.extension().string();
+//     return (output_path / output_filename).string();
+// }
+
+// bool ReadCorrection::is_fastq_by_extension(const std::string &input_file) {
+//     std::string ext = std::filesystem::path(input_file).extension().string();
+//     std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower); // Convert to lower case for case-insensitive comparison
+
+//     if (ext == ".gz") {
+//         std::string stem_ext = std::filesystem::path(input_file).stem().extension().string();
+//         std::transform(stem_ext.begin(), stem_ext.end(), stem_ext.begin(), ::tolower); // Convert to lower case for case-insensitive comparison
+        
+//         if (stem_ext == ".fastq" || stem_ext == ".fq") {
+//             return true;
+//         } else if (stem_ext == ".fasta" || stem_ext == ".fa") {
+//             return false;
+//         } else {
+//             throw std::runtime_error("Unknown file extension before .gz: " + stem_ext);
+//         }
+//     } else {
+//         if (ext == ".fastq" || ext == ".fq") {
+//             return true;
+//         } else if (ext == ".fasta" || ext == ".fa") {
+//             return false;
+//         } else {
+//             throw std::runtime_error("Unknown file extension: " + ext);
+//         }
+//     }
+// }
+
+// void ReadCorrection::write_graph2dataset(std::map<std::string, std::vector<seqan3::phred42>>, ){
+//     // Define the type of sequence file input
+//     seqan3::sequence_file_input input{args.input_data};
+
+//     auto output_correction_file = get_output_filename(std::string ".correction");
+//     std::ofstream output_stream(output_correction_file);
+
+//     auto is_fastq = is_fastq_by_extension(args.input_data);
+
+//     // Define the type of sequence file output
+//     if (is_fastq) {
+//         seqan3::sequence_file_output output{output_stream, seqan3::format_fastq{}};
+//         for (const auto &vertex : boost::make_iterator_range(vertices(graph_))) {
+//             const auto &props = graph_[vertex];
+//             for (const auto &id : props.ids) {
+//                 output.emplace_back(props.read, id + " " + id2description_[id], id2quality_[id]);
+//             }
+//         }
+//     } else {
+//         seqan3::sequence_file_output output{output_stream, seqan3::format_fasta{}};
+//         for (const auto &vertex : boost::make_iterator_range(vertices(graph_))) {
+//             const auto &props = graph_[vertex];
+//             for (const auto &id : props.ids) {
+//                 output.emplace_back(props.read, id + " " + id2description_[id]);
+//             }
+//         } 
+//     }
+// }

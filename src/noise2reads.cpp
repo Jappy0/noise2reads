@@ -8,13 +8,14 @@
  */
 
 #include "Utils.hpp"
+#include "Parser.hpp"
 #include "LoggingLevels.hpp"
-#include "ReadWrite.hpp"
-#include "MinimizerGenerator.hpp"
 #include "GraphConstructor.hpp"
+#include "Reader.hpp"
+#include "MinimizerGenerator.hpp"
 #include "OMH.hpp"
 #include "ReadCorrection.hpp"
-#include "Parser.hpp"
+#include "OutputWriter.hpp"
 
 #include <time.h>
 #include <stdlib.h>
@@ -104,7 +105,8 @@ int main(int argc, char** argv) {
         args.num_process = std::min(std::max(args.num_process, 1), available_cores);
         Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("The number of threads: %1% ") % args.num_process));
         ////////////////////////////////////////////////////////////
-        auto [unique_reads, read2count, read2ids, min_read_length] = ReadWrite<Args_Type>(args).get_unique_reads_counts();
+        Reader<Args_Type> reader(args);
+        auto [unique_reads, read2count, read2ids, min_read_length] = reader.get_unique_reads_counts();
         args.read_length = min_read_length;
         auto total_uniq_num = unique_reads.size();
         Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("The number of unique reads: %1%, minimum read length: %2%.") % total_uniq_num % min_read_length));
@@ -130,6 +132,11 @@ int main(int argc, char** argv) {
         //////////////////////////////////////////////////////////////
         ReadCorrection read_correction(nt_ed_graph, args, graph_constructor.get_read2vertex(), graph_constructor.get_vertex2read());
         read_correction.correction_main(read2count);
+        Graph update_ed_graph = read_correction.get_graph();
+
+        auto id2quality = reader.get_id2quality();
+        auto id2description = reader.get_id2description();
+        OutputWriter<Args_Type>(args).write_graph2dataset(std::move(update_ed_graph), id2quality, id2description);
         //////////////////////////////////////////////////////////////
     } else if (sub_parser.info.app_name == std::string_view{"noise2reads-graph"}){
         using Args_Type = graph_arguments;
@@ -150,7 +157,7 @@ int main(int argc, char** argv) {
         Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("The number of threads: %1% ") % args.num_process));
 
         ////////////////////////////////////////////////////////////
-        auto [unique_reads, read2count, read2ids, min_read_length] = ReadWrite<Args_Type>(args).get_unique_reads_counts();
+        auto [unique_reads, read2count, read2ids, min_read_length] = Reader<Args_Type>(args).get_unique_reads_counts();
         args.read_length = min_read_length;
         auto total_uniq_num = unique_reads.size();
         Utils::getInstance().logger(LOG_LEVEL_INFO, boost::str(boost::format("The number of unique reads: %1%, minimum read length: %2%.") % total_uniq_num % min_read_length));

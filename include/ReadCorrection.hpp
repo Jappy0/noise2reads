@@ -28,6 +28,11 @@ public:
     void correction_process(const std::vector<std::vector<seqan3::dna5>>& low_count_reads, int w);
     void correction_main(const std::map<std::vector<seqan3::dna5>, uint32_t>& read2count);
     void correction_isolates(const std::map<std::vector<seqan3::dna5>, uint32_t>& read2count);
+
+    Graph get_graph() const {
+        return graph_;
+    }
+
 private:
     // std::unordered_map<std::uint64_t, std::vector<std::vector<seqan3::dna5>>> key2reads_;
     // std::map<std::vector<seqan3::dna5>, uint32_t> read2count_;

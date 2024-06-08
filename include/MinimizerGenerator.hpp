@@ -2,7 +2,7 @@
 #ifndef __MINIMIZERGENERATOR_HPP__
 #define __MINIMIZERGENERATOR_HPP__
 
-#include "ReadWrite.hpp"
+#include "Reader.hpp"
 #include "Utils.hpp"
 #include "LoggingLevels.hpp"
 
