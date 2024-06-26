@@ -1,7 +1,9 @@
 # noise2reads
 <!-- [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11388496.svg)](https://doi.org/10.5281/zenodo.11388496) -->
 
-noise2reads is a practical method for constructing an edit-distance-based read graph for a short-read sequencing dataset via minimizer and order min hash bucketing and graph traversal.
+noise2reads is an error correction and deduplication method based on constructed edit-distance-based read graphs for a short-read sequencing dataset.
+
+# noise2reads is currently under development
 
 ## Installation
 ### From bioconda
