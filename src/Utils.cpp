@@ -66,7 +66,7 @@ void Utils::logger(int log_level, const std::string& message){
     //     logFile << timeString << ": " << log_prefix << message << endl;
     //     logFile.close();
     // }else {
-    //     std::cerr << "\033[1;31mERROR: reads2graph log file opened failed.\033[0m" << std::endl;
+    //     std::cerr << "\033[1;31mERROR: noise2reads log file opened failed.\033[0m" << std::endl;
     // }
 }
 
@@ -87,7 +87,7 @@ Utils::Utils() {
 
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        std::string filePath = std::string(cwd) + "/reads2graph" + oss.str();
+        std::string filePath = std::string(cwd) + "/noise2reads" + oss.str();
         logFile.open(filePath, std::ios::app);
     } else {
         std::cerr << timeString << ": "<< "Error: unable to get current working directory." << std::endl;

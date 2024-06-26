@@ -116,9 +116,6 @@ void ReadCorrection::correction_process(const std::vector<std::vector<seqan3::dn
             }
         }
     }
-
-    // Handle isolated nodes if needed
-    // For example, you might want to log or process isolated_node_ids further.
 }
 
 void ReadCorrection::correction_main(const std::map<std::vector<seqan3::dna5>, uint32_t>& read2count){
@@ -126,7 +123,7 @@ void ReadCorrection::correction_main(const std::map<std::vector<seqan3::dna5>, u
     for (int w_i = 1; w_i <= args.max_edit_dis; w_i++){
         correction_process(low_count_reads, w_i);
     }
-    correction_isolates(read2count);
+    // correction_isolates(read2count);
 }
 
 // std::string ReadCorrection::get_output_filename(std::string output_type) {
