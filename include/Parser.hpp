@@ -15,7 +15,7 @@
 #pragma once
 
 #define noise2reads_VERSION "0.2.0"
-#define last_update_date "08.06.2024"
+#define last_update_date "26.06.2024"
 
 using namespace std;
 
@@ -62,7 +62,7 @@ struct umi_arguments
     unsigned visit_depth{15};
     bool save_graph{false};
     ////////////
-    unsigned int freq_thresh;
+    unsigned int freq_thresh{4};
     bool error_correction{true};
     bool deduplication{true};
     // bool compression{true};
@@ -91,7 +91,7 @@ struct read_arguments
     unsigned visit_depth{15};
     bool save_graph{false};
     ////////////
-    unsigned int freq_thresh;
+    unsigned int freq_thresh{4};
     bool error_correction{true};
     bool deduplication{true};
     // bool compression{true};
