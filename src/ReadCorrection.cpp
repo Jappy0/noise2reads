@@ -119,11 +119,113 @@ void ReadCorrection::correction_process(const std::vector<std::vector<seqan3::dn
 }
 
 void ReadCorrection::correction_main(const std::map<std::vector<seqan3::dna5>, uint32_t>& read2count){
-    auto low_count_reads = get_low_frequency_reads(read2count);
+    std::vector<std::vector<seqan3::dna5>> low_count_reads;
     for (int w_i = 1; w_i <= args.max_edit_dis; w_i++){
+        if (w_i == 1){
+            low_count_reads = get_low_frequency_reads(read2count);
+        } else {
+            auto [high_freq_reads, low_freq_reads] = get_high_low_freq_reads();
+            update_graph(high_freq_reads, w_i);
+            low_count_reads = low_freq_reads;
+        }
         correction_process(low_count_reads, w_i);
     }
     // correction_isolates(read2count);
+}
+
+std::pair<std::vector<std::vector<seqan3::dna5>>, std::vector<std::vector<seqan3::dna5>>> ReadCorrection::get_high_low_freq_reads() {
+    std::vector<std::vector<seqan3::dna5>> high_freq_reads;
+    std::vector<std::vector<seqan3::dna5>> low_freq_reads;
+
+    for (auto vp : boost::make_iterator_range(vertices(graph_))) {
+        const auto &vertex = graph_[vp];
+        if (vertex.count >= args.freq_thresh) {
+            high_freq_reads.push_back(vertex.read);
+        } else {
+            low_freq_reads.push_back(vertex.read);
+        }
+    }
+    return {high_freq_reads, low_freq_reads};
+}
+
+void ReadCorrection::update_graph(std::vector<std::vector<seqan3::dna5>> high_freq_reads, int w){
+    std::vector<std::pair<int, int>> v_pairs;
+    #pragma omp parallel for num_threads(args.num_process) schedule(static)
+    for (const auto &cur_read : high_freq_reads){
+        auto cur_v = read2vertex_[cur_read];
+        auto indirect_neighbors = visitNeighborsOfNeighborsWithThreshold(graph_, cur_v, args.visit_depth);
+        if (!indirect_neighbors.empty()) {
+            for (auto v : indirect_neighbors){
+                std::pair<int, int> cur_pair = std::make_pair(cur_v, v);
+                #pragma omp critical
+                v_pairs.emplace_back(cur_pair);
+            }
+            // std::cout << "good" << endl;
+        }
+    }
+
+    auto config = seqan3::align_cfg::method_global{} | seqan3::align_cfg::edit_scheme | seqan3::align_cfg::min_score{-1 * args.max_edit_dis} | seqan3::align_cfg::output_score{};
+
+    #pragma omp parallel for num_threads(args.num_process) schedule(static)
+    for (const auto& pair : v_pairs) {
+        auto seq1 = vertex2read_[pair.first];
+        auto seq2 = vertex2read_[pair.second];
+        auto alignment_results = seqan3::align_pairwise(std::tie(seq1, seq2), config);
+        // Iterate over alignment results and access the scores
+        for (auto const &result : alignment_results)
+        {
+            int edit_distance = -1 * result.score();
+            //if ((edit_distance >= min_s) && (edit_distance <= max_s))
+            if (edit_distance == w) 
+            {
+                #pragma omp critical
+                {
+                    insert_edge(seq1, seq2, edit_distance);
+                }                    
+            } 
+        } 
+    } 
+    Utils::getInstance().logger(LOG_LEVEL_INFO,  "Graph Updated!");    
+}
+
+void ReadCorrection::visitNeighborsWithThreshold(const Graph& g, Vertex node, int distance_threshold, int current_distance, std::vector<Vertex>& indirect_neighbors, std::vector<bool>& visited) {
+    // Mark the current node as visited
+    visited[node] = true;
+    // Iterate over the adjacent vertices of the given node
+    graph_traits<Graph>::adjacency_iterator ai, ai_end;
+    for (boost::tie(ai, ai_end) = adjacent_vertices(node, g); ai != ai_end; ++ai) {
+        Vertex neighbor = *ai;
+        // Visit neighbor if not visited and distance does not exceed threshold
+        if (!visited[neighbor] && current_distance + 1 <= distance_threshold) {
+            indirect_neighbors.push_back(neighbor);
+            // Recursively visit neighbors of neighbors
+            visitNeighborsWithThreshold(g, neighbor, distance_threshold, current_distance + 1, 
+                                         indirect_neighbors, visited);
+        } else {
+            return;
+        }
+    }
+}
+
+// Function to visit neighbors of neighbors until distance exceeds a threshold
+std::vector<Vertex> ReadCorrection::visitNeighborsOfNeighborsWithThreshold(const Graph& g, Vertex node, int distance_threshold) {
+    std::vector<Vertex> indirect_neighbors;
+    std::vector<bool> visited(num_vertices(g), false); // Initialize visited array
+
+    // Visit neighbors of neighbors with the specified threshold
+    visitNeighborsWithThreshold(g, node, distance_threshold, 0, indirect_neighbors, visited);
+
+    return indirect_neighbors;
+}
+
+void ReadCorrection::insert_edge(std::vector<seqan3::dna5> read1, std::vector<seqan3::dna5> read2, int edit_dis)
+{
+    auto v1 = read2vertex_[read1];
+    auto v2 = read2vertex_[read2];
+    if (!boost::edge(v1, v2, graph_).second) {
+        // boost::add_edge(v1, v2, {read1, read2, edit_dis}, graph_);
+        boost::add_edge(v1, v2, {edit_dis}, graph_);
+    }
 }
 
 // std::string ReadCorrection::get_output_filename(std::string output_type) {

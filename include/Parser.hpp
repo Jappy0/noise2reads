@@ -14,8 +14,8 @@
 #include <sharg/all.hpp> 
 #pragma once
 
-#define noise2reads_VERSION "0.2.0"
-#define last_update_date "26.06.2024"
+#define noise2reads_VERSION "0.3.0"
+#define last_update_date "28.06.2024"
 
 using namespace std;
 

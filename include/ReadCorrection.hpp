@@ -29,6 +29,12 @@ public:
     void correction_main(const std::map<std::vector<seqan3::dna5>, uint32_t>& read2count);
     void correction_isolates(const std::map<std::vector<seqan3::dna5>, uint32_t>& read2count);
 
+    void update_graph(std::vector<std::vector<seqan3::dna5>> high_freq_reads, int w);
+    void visitNeighborsWithThreshold(const Graph& g, Vertex node, int distance_threshold, int current_distance, std::vector<Vertex>& indirect_neighbors, std::vector<bool>& visited);
+    std::vector<Vertex> visitNeighborsOfNeighborsWithThreshold(const Graph& g, Vertex node, int distance_threshold);
+    std::pair<std::vector<std::vector<seqan3::dna5>>, std::vector<std::vector<seqan3::dna5>>> get_high_low_freq_reads();
+    void insert_edge(std::vector<seqan3::dna5> read1, std::vector<seqan3::dna5> read2, int edit_dis);
+
     Graph get_graph() const {
         return graph_;
     }
